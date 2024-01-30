@@ -5,6 +5,7 @@
 </script>
 
 <div
+	class="border-2 border-solid text-pink border-current bg-base rounded-md p-2 absolute flex flex-col"
 	style="
 		top: {y + 5}px;
 		left: {x + 5}px;"
@@ -15,17 +16,6 @@
 </div>
 
 <style>
-	div {
-		border: 1px solid var(--color-text);
-		background: var(--color-background);
-		color: var(--color-text);
-		border-radius: 4px;
-		padding: 4px;
-		position: absolute;
-		display: flex;
-		flex-direction: column;
-	}
-
 	:global(.tooltip_underline) {
 		text-decoration: underline;
 	}
