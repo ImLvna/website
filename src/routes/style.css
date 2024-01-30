@@ -1,4 +1,4 @@
-@import url(/font/ComicCodeLigatures.css);
+@import url(/font/ComicCodeLigatures/font.css);
 
 @tailwind base;
 @tailwind components;

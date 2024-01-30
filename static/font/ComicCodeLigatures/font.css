@@ -1,31 +1,31 @@
 @font-face {
   font-family: 'Comic Code Ligatures';
-  src: url('/font/ComicCodeLigatures-Regular.otf');
+  src: url('/font/ComicCodeLigatures/ComicCodeLigatures-Regular.otf');
 }
 @font-face {
   font-family: 'Comic Code Ligatures';
-  src: url('/font/ComicCodeLigatures-Bold.otf');
+  src: url('/font/ComicCodeLigatures/ComicCodeLigatures-Bold.otf');
   font-weight: bold;
 }
 @font-face {
   font-family: 'Comic Code Ligatures';
-  src: url('/font/ComicCodeLigatures-BoldItalic.otf');
+  src: url('/font/ComicCodeLigatures/ComicCodeLigatures-BoldItalic.otf');
   font-weight: bold;
   font-style: italic;
 }
 @font-face {
   font-family: 'Comic Code Ligatures';
-  src: url('/font/ComicCodeLigatures-Italic.otf');
+  src: url('/font/ComicCodeLigatures/ComicCodeLigatures-Italic.otf');
   font-style: italic;
 }
 @font-face {
   font-family: 'Comic Code Ligatures';
-  src: url('/font/ComicCodeLigatures-Medium.otf');
+  src: url('/font/ComicCodeLigatures/ComicCodeLigatures-Medium.otf');
   font-weight: 500;
 }
 @font-face {
   font-family: 'Comic Code Ligatures';
-  src: url('/font/ComicCodeLigatures-MediumItalic.otf');
+  src: url('/font/ComicCodeLigatures/ComicCodeLigatures-MediumItalic.otf');
   font-weight: 500;
   font-style: italic;
 }
