@@ -1,10 +1,5 @@
 export const projects = [
 	{
-		name: 'Elevated Website',
-		language: 'Svelte',
-		url: 'https://website-v2-a2d.pages.dev/'
-	},
-	{
 		name: 'This Website',
 		language: 'Svelte',
 		url: 'https://lvna.gay',
