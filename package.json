@@ -15,6 +15,7 @@
 	},
 	"devDependencies": {
 		"@catppuccin/tailwindcss": "^0.1.6",
+		"@spotify/web-api-ts-sdk": "^1.2.0",
 		"@sveltejs/adapter-auto": "^3.1.1",
 		"@sveltejs/adapter-cloudflare": "^4.1.0",
 		"@sveltejs/adapter-node": "^3.0.3",

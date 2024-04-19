@@ -1,9 +1,27 @@
 <script lang="ts">
 	import { projects } from '$lib/projects';
 	import tooltip from '$lib/tooltip';
+	import { writable } from 'svelte/store';
 	import type { PageServerData } from './$types';
+	import { onMount } from 'svelte';
+	import type { Artist } from '@spotify/web-api-ts-sdk';
 
 	export let data: PageServerData;
+
+	const nowPlaying = writable(data.nowPlaying);
+
+	onMount(() => {
+		const fetchNowPlaying = async () => {
+			const response = await fetch('https://spotify.lvna.gay/now-playing').then((r) => r.json());
+			nowPlaying.set(response);
+			let nextTime = Date.now() + 5000;
+			if (response.is_playing && response.item) {
+				nextTime = Date.now() + response.item.duration_ms - response.progress_ms;
+			}
+			setTimeout(fetchNowPlaying, nextTime - Date.now());
+		};
+		fetchNowPlaying();
+	});
 </script>
 
 <div class="root flex flex-col w-full h-full">
@@ -12,11 +30,27 @@
 		src="https://cdn.discordapp.com/avatars/{data.user.id}/{data.user.avatar}.png"
 		alt="Profile"
 	/>
-	<h1 class="text-5xl">Luna</h1>
+	<h1 class="text-5xl">Lily</h1>
 	<p class="text-1xl py-10">
 		I am a freelance programmer who works on a variety of projects. I work in many languages, but
 		specialize in Typescript
 	</p>
+	{#if $nowPlaying.item}
+		<h2 class="text-3xl">Currently Listening To:</h2>
+		<div class="flex flex-row h-20 gap-3">
+			{#if $nowPlaying.item.album?.images?.length > 0}
+				<img
+					class="rounded-full w-20 h-20 spin"
+					src={$nowPlaying.item.album.images[0].url}
+					alt="Album Cover"
+				/>
+			{/if}
+			<div class="flex flex-col h-20 justify-center">
+				<p>{$nowPlaying.item.name}</p>
+				<p>{$nowPlaying.item.artists.map((a) => a.name).join(', ')}</p>
+			</div>
+		</div>
+	{/if}
 	<h2 class="text-3xl">Facts about me:</h2>
 	<ul class="list-none">
 		<li>I am a puppy!</li>
@@ -52,5 +86,18 @@
 	.root > * {
 		align-self: center;
 		text-align: center;
+	}
+
+	.spin {
+		animation: spin 5s linear infinite;
+	}
+
+	@keyframes spin {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>
