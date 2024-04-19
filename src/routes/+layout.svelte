@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-	<title>Luna's Site</title>
+	<title>Lily's Site</title>
 </svelte:head>
 
 <div class="root bg-base text-text min-h-full w-full">
