@@ -22,7 +22,7 @@
 
 		// No endTimeMs
 		if (!Object.keys(lyrics.lyrics.lines[0]).includes('endTimeMs')) {
-			console.log(before);
+			if (before.length === 0) return '';
 			const match = before[before.length - 1];
 			return match.words === '♪' ? '' : match.words;
 		}
@@ -59,6 +59,7 @@
 			nowPlaying = response;
 
 			if (oldNowPlaying && oldNowPlaying.item?.id !== nowPlaying.item?.id) {
+				lyrics = null;
 				await getLyrics();
 			}
 
