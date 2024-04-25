@@ -1,26 +1,84 @@
 <script lang="ts">
 	import { projects } from '$lib/projects';
-	import tooltip from '$lib/tooltip';
-	import { writable } from 'svelte/store';
-	import type { PageServerData } from './$types';
+	import tooltip from '$lib/tooltip/index.svelte';
+	import { type Lyrics, type LyricsLineSyncedEndTimes } from '$lib/types/spotify';
 	import { onMount } from 'svelte';
-	import type { Artist } from '@spotify/web-api-ts-sdk';
 
-	export let data: PageServerData;
+	let { data } = $props();
 
-	const nowPlaying = writable(data.nowPlaying);
+	let nowPlaying = $state(data.nowPlaying);
+	let curTimeMs = $state<number | null>(null);
+	let lyrics = $state<Lyrics | null>(null);
+	const currentLyric = $derived.by(() => {
+		if (!lyrics) return null;
+		if (!curTimeMs) return null;
+		if (!nowPlaying?.is_playing) return null;
+		if (lyrics.lyrics.syncType === 'UNSYNCED') return null;
+		if (lyrics.lyrics.lines.length === 0) return null;
 
-	onMount(() => {
+		const before = lyrics.lyrics.lines.filter(
+			(l) => Number(l.startTimeMs) <= curTimeMs!
+		) as LyricsLineSyncedEndTimes['lyrics']['lines'];
+
+		// No endTimeMs
+		if (!Object.keys(lyrics.lyrics.lines[0]).includes('endTimeMs')) {
+			console.log(before);
+			const match = before[before.length - 1];
+			return match.words === '♪' ? '' : match.words;
+		}
+
+		const match = (before as LyricsLineSyncedEndTimes['lyrics']['lines']).find(
+			(l) => Number(l.endTimeMs) >= curTimeMs!
+		);
+
+		if (!match) return '';
+		return match.words === '♪' ? '' : match.words;
+	});
+
+	$inspect(lyrics);
+
+	$effect(() => {
+		curTimeMs = nowPlaying.progress_ms;
+	});
+
+	async function getLyrics() {
+		try {
+			const newLyrics = await fetch(
+				`https://spotify-lyrics-api.lvna.workers.dev/lyrics/${nowPlaying.item.id}`
+			).then((r) => r.json());
+			lyrics = newLyrics;
+		} catch (e) {
+			lyrics = null;
+		}
+	}
+
+	onMount(async () => {
 		const fetchNowPlaying = async () => {
+			const oldNowPlaying = nowPlaying;
 			const response = await fetch('https://spotify.lvna.gay/now-playing').then((r) => r.json());
-			nowPlaying.set(response);
+			nowPlaying = response;
+
+			if (oldNowPlaying && oldNowPlaying.item?.id !== nowPlaying.item?.id) {
+				await getLyrics();
+			}
+
 			let nextTime = Date.now() + 5000;
 			if (response.is_playing && response.item) {
-				nextTime = Date.now() + response.item.duration_ms - response.progress_ms;
+				nextTime = Math.min(
+					nextTime,
+					Date.now() + response.item.duration_ms - response.progress_ms
+				);
 			}
 			setTimeout(fetchNowPlaying, nextTime - Date.now());
 		};
-		fetchNowPlaying();
+		await fetchNowPlaying();
+		await getLyrics();
+
+		setInterval(() => {
+			if (curTimeMs === null) return;
+			if (!nowPlaying.is_playing) return;
+			curTimeMs += 250;
+		}, 250);
 	});
 </script>
 
@@ -35,19 +93,22 @@
 		I am a freelance programmer who works on a variety of projects. I work in many languages, but
 		specialize in Typescript
 	</p>
-	{#if $nowPlaying.item}
+	{#if nowPlaying.item && nowPlaying.is_playing}
 		<h2 class="text-3xl">Currently Listening To:</h2>
 		<div class="flex flex-row h-20 gap-3">
-			{#if $nowPlaying.item.album?.images?.length > 0}
+			{#if nowPlaying.item.album?.images?.length > 0}
 				<img
 					class="rounded-full w-20 h-20 spin"
-					src={$nowPlaying.item.album.images[0].url}
+					src={nowPlaying.item.album.images[0].url}
 					alt="Album Cover"
 				/>
 			{/if}
 			<div class="flex flex-col h-20 justify-center">
-				<p>{$nowPlaying.item.name}</p>
-				<p>{$nowPlaying.item.artists.map((a) => a.name).join(', ')}</p>
+				<p>{nowPlaying.item.name}</p>
+				<p>{nowPlaying.item.artists.map((a) => a.name).join(', ')}</p>
+				{#if currentLyric}
+					<p use:tooltip={'Lyrics!'}>{currentLyric}</p>
+				{/if}
 			</div>
 		</div>
 	{/if}

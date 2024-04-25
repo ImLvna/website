@@ -1,27 +1,26 @@
+import { mount, unmount } from 'svelte';
 import Tooltip from './component.svelte';
 
 export default function tooltip(element: HTMLElement, text: string) {
 	element.classList.add('tooltip_underline');
 
+	const props = $state({ x: 0, y: 0, text: text });
+
 	let tooltipComponent: Tooltip;
 	function mouseOver(event: MouseEvent) {
-		tooltipComponent = new Tooltip({
-			props: {
-				text,
-				x: event.pageX,
-				y: event.pageY
-			},
+		props.x = event.pageX;
+		props.y = event.pageY;
+		tooltipComponent = mount(Tooltip, {
+			props,
 			target: document.body
 		});
 	}
 	function mouseMove(event: MouseEvent) {
-		tooltipComponent.$set({
-			x: event.pageX,
-			y: event.pageY
-		});
+		props.x = event.pageX;
+		props.y = event.pageY;
 	}
 	function mouseLeave() {
-		tooltipComponent.$destroy();
+		unmount(tooltipComponent);
 	}
 
 	element.addEventListener('mouseover', mouseOver);
@@ -35,8 +34,7 @@ export default function tooltip(element: HTMLElement, text: string) {
 			element.removeEventListener('mousemove', mouseMove);
 		},
 		update(newText: string) {
-			text = newText;
-			tooltipComponent.$set({ text });
+			props.text = newText;
 		}
 	};
 }
