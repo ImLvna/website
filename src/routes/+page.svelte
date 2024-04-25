@@ -7,10 +7,17 @@
 	let { data } = $props();
 
 	let nowPlaying = $state(data.nowPlaying);
-	let curTimeMs = $state<number | null>(null);
-	let lyrics = $state<Lyrics | null>(null);
+	let curTimeMs = $state<number | null>(data.nowPlaying?.progress_ms ?? null);
+	let nextFetchTime = $derived.by(() => {
+		let then = 5000;
+		if (nowPlaying?.is_playing && nowPlaying?.item) {
+			then = Math.min(then, nowPlaying.item.duration_ms - nowPlaying.progress_ms);
+		}
+		return then + Date.now();
+	});
+	let lyrics = $state<Lyrics | null>(data.lyrics ?? null);
 	const currentLyric = $derived.by(() => {
-		if (!lyrics) return null;
+		if (!lyrics || !lyrics.lyrics) return null;
 		if (!curTimeMs) return null;
 		if (!nowPlaying?.is_playing) return null;
 		if (lyrics.lyrics.syncType === 'UNSYNCED') return null;
@@ -35,13 +42,12 @@
 		return match.words === '♪' ? '' : match.words;
 	});
 
-	$inspect(lyrics);
-
 	$effect(() => {
-		curTimeMs = nowPlaying.progress_ms;
+		if (nowPlaying) curTimeMs = nowPlaying.progress_ms;
 	});
 
 	async function getLyrics() {
+		if (!nowPlaying?.item) return;
 		try {
 			const newLyrics = await fetch(
 				`https://spotify-lyrics-api.lvna.workers.dev/lyrics/${nowPlaying.item.id}`
@@ -53,31 +59,24 @@
 	}
 
 	onMount(async () => {
+		console.log(nextFetchTime);
 		const fetchNowPlaying = async () => {
 			const oldNowPlaying = nowPlaying;
 			const response = await fetch('https://spotify.lvna.gay').then((r) => r.json());
 			nowPlaying = response;
 
-			if (oldNowPlaying && oldNowPlaying.item?.id !== nowPlaying.item?.id) {
+			if (oldNowPlaying && oldNowPlaying.item?.id !== nowPlaying?.item?.id) {
 				lyrics = null;
 				await getLyrics();
 			}
-
-			let nextTime = Date.now() + 5000;
-			if (response.is_playing && response.item) {
-				nextTime = Math.min(
-					nextTime,
-					Date.now() + response.item.duration_ms - response.progress_ms
-				);
-			}
-			setTimeout(fetchNowPlaying, nextTime - Date.now());
+			setTimeout(fetchNowPlaying, nextFetchTime - Date.now());
 		};
-		await fetchNowPlaying();
-		await getLyrics();
+
+		setTimeout(fetchNowPlaying, nextFetchTime - Date.now());
 
 		setInterval(() => {
 			if (curTimeMs === null) return;
-			if (!nowPlaying.is_playing) return;
+			if (!nowPlaying?.is_playing) return;
 			curTimeMs += 250;
 		}, 250);
 	});
@@ -94,7 +93,7 @@
 		I am a freelance programmer who works on a variety of projects. I work in many languages, but
 		specialize in Typescript
 	</p>
-	{#if nowPlaying.item && nowPlaying.is_playing}
+	{#if nowPlaying && nowPlaying.item && nowPlaying.is_playing}
 		<h2 class="text-3xl">Currently Listening To:</h2>
 		<div class="flex flex-row h-20 gap-3">
 			{#if nowPlaying.item.album?.images?.length > 0}
