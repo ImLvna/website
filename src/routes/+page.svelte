@@ -55,7 +55,7 @@
 	onMount(async () => {
 		const fetchNowPlaying = async () => {
 			const oldNowPlaying = nowPlaying;
-			const response = await fetch('https://spotify.lvna.gay/now-playing').then((r) => r.json());
+			const response = await fetch('https://spotify.lvna.gay').then((r) => r.json());
 			nowPlaying = response;
 
 			if (oldNowPlaying && oldNowPlaying.item?.id !== nowPlaying.item?.id) {
