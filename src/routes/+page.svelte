@@ -63,6 +63,7 @@
 
 	async function getLyrics() {
 		if (!nowPlaying?.item) return;
+		if (nowPlaying.item.uri.startsWith('spotify:local')) return (lyrics = null);
 		try {
 			const newLyrics = await fetch(
 				`https://spotify-lyrics-api.lvna.workers.dev/lyrics/${nowPlaying.item.id}`

@@ -12,7 +12,12 @@ export const load: PageServerLoad = async () => {
 	try {
 		nowPlaying = await fetch('https://spotify.lvna.gay').then((res) => res.json());
 
-		if (nowPlaying && nowPlaying.is_playing) {
+		if (
+			nowPlaying &&
+			nowPlaying.is_playing &&
+			nowPlaying.item &&
+			!nowPlaying.item.uri.startsWith('spotify:local')
+		) {
 			try {
 				lyrics = await fetch(
 					`https://spotify-lyrics-api.lvna.workers.dev/lyrics/${nowPlaying.item.id}`
