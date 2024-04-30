@@ -186,11 +186,11 @@
 		<li use:tooltip={'This is not a joke.'}>My pronouns are Pup/Pups</li>
 		<li>Trans</li>
 		<li>Lesbian-Leaning</li>
-		<li use:tooltip={'i love you annie <3'}>Taken</li>
+		<li use:tooltip={'i love you annie and charlie <3'}>Taken</li>
 	</ul>
 	<h2 class="text-3xl">I Know:</h2>
 	<ul class="list-disc list-outside">
-		{#each ['Typescript', 'Javascript', 'C#', 'HTML', 'CSS', 'Svelte', 'React', 'Rust'] as i}
+		{#each ['Typescript', 'Svelte', 'Python', 'React', 'Rust'] as i}
 			<li>{i}</li>
 		{/each}
 	</ul>
