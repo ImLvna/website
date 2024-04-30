@@ -13,9 +13,13 @@ export const load: PageServerLoad = async () => {
 		nowPlaying = await fetch('https://spotify.lvna.gay').then((res) => res.json());
 
 		if (nowPlaying && nowPlaying.is_playing) {
-			lyrics = await fetch(
-				`https://spotify-lyrics-api.lvna.workers.dev/lyrics/${nowPlaying.item.id}`
-			).then((r) => r.json());
+			try {
+				lyrics = await fetch(
+					`https://spotify-lyrics-api.lvna.workers.dev/lyrics/${nowPlaying.item.id}`
+				).then((r) => r.json());
+			} catch (e) {
+				/* empty */
+			}
 		}
 	} catch (e) {
 		console.error(e);
