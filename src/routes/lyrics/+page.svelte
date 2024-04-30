@@ -16,6 +16,18 @@
 		return then + Date.now();
 	});
 	let lyrics = $state<Lyrics | null>(data.lyrics ?? null);
+
+	const before = $derived.by(() => {
+		if (!lyrics || !lyrics.lyrics) return null;
+		if (!curTimeMs) return null;
+		if (!nowPlaying?.is_playing) return null;
+		if (lyrics.lyrics.syncType === 'UNSYNCED') return null;
+		if (lyrics.lyrics.lines.length === 0) return null;
+
+		return lyrics.lyrics.lines.filter(
+			(l) => Number(l.startTimeMs) <= curTimeMs!
+		) as LyricsLineSyncedEndTimes['lyrics']['lines'];
+	});
 	const currentLyric = $derived.by(() => {
 		if (!lyrics || !lyrics.lyrics) return null;
 		if (!curTimeMs) return null;
@@ -43,7 +55,6 @@
 	});
 
 	$effect(() => {
-		console.log(nowPlaying?.item.uri);
 		if (nowPlaying) curTimeMs = nowPlaying.progress_ms;
 	});
 
@@ -97,12 +108,10 @@
 	{#if nowPlaying && nowPlaying.item && nowPlaying.is_playing}
 		<h2 class="text-3xl">Currently Listening To:</h2>
 		<div class="flex flex-row h-20 gap-3">
-			{#if nowPlaying.item.album?.images?.length > 0 || nowPlaying.item.uri.startsWith('spotify:local')}
+			{#if nowPlaying.item.album?.images?.length > 0}
 				<img
 					class="rounded-full w-20 h-20 spin"
-					src={nowPlaying.item.uri.startsWith('spotify:local')
-						? `https://localfiles.lvna.gay/${nowPlaying.item.uri}/image`
-						: nowPlaying.item.album.images[0].url}
+					src={nowPlaying.item.album.images[0].url}
 					alt="Album Cover"
 				/>
 			{/if}
