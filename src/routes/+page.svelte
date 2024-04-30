@@ -52,7 +52,6 @@
 	$effect(() => {
 		if (nowPlaying?.item?.uri.startsWith('spotify:local') && audioSource) {
 			const audioSourceTarget = `https://localfiles.lvna.gay/${nowPlaying.item.uri}`;
-			console.log(audioSourceTarget, audioSource.src);
 			if (audioSource.src !== audioSourceTarget) {
 				audioSource.src = audioSourceTarget;
 				audioSource.load();
