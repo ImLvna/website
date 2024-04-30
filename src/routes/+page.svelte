@@ -154,13 +154,15 @@
 						<div class="flex flex-col h-16 w-16 text-black rounded-full bg-pink justify-center">
 							<button
 								onclick={() => {
-								hasPlayed = true;
+								
 								if (!audioSource) return;
 								if (audioSource.paused) {
 									audioSource.currentTime = curTimeMs! / 1000;
+									hasPlayed = true;
 									audioSource.play();
 								} else {
 									audioSource.pause();
+									hasPlayed = false;
 								}
 							}}
 							>
