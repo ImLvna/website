@@ -8,6 +8,14 @@
 
 	let audioSource = $state<HTMLAudioElement | null>(null);
 	let audioSourcePlaying = $state(false);
+
+
+	$effect(() => {
+		if (audioSource) {
+			audioSource.volume = 0.2;
+		}
+	});
+
 	let hasPlayed = $state(false);
 	let nowPlaying = $state(data.nowPlaying);
 	let curTimeMs = $state<number | null>(data.nowPlaying?.progress_ms ?? null);
@@ -144,7 +152,6 @@
 				</div>
 				{#if nowPlaying.item.uri.startsWith('spotify:local')}
 					<audio
-						volume={0.2}
 						bind:this={audioSource}
 						onplay={() => (audioSourcePlaying = true)}
 						onpause={() => (audioSourcePlaying = false)}
