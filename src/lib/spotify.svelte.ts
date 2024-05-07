@@ -11,7 +11,7 @@ interface SpotifyOptions {
 export default class Spotify {
 	options: SpotifyOptions = $state({
 		nowPlayingApiUrl: 'https://spotify.lvna.gay',
-		lyricsApiUrl: 'https://spotify-lyrics-api-test.lvna.workers.dev',
+		lyricsApiUrl: 'https://spotify-lyrics-api.lvna.workers.dev',
 		fetchInterval: 5000
 	});
 	item:
