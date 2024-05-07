@@ -6,44 +6,52 @@ export interface NowPlaying extends PlaybackState {
 		artists: Artist[];
 	};
 }
-
-/**
- * The Three below are returned depending on the syncType of the lyrics
- */
-
-// Given when the syncType is 'UNSYNCED'
 export type LyricsUnsynced = {
-	lyrics: {
-		syncType: 'UNSYNCED';
-		lines: {
-			words: string;
-		}[];
-	};
+	syncType: 'UNSYNCED';
+	lines: {
+		opposite: boolean;
+		text: string;
+	}[];
 };
 
-// Given when the syncType is 'LINE_SYNCED' and no endTimeMs is given
 export type LyricsLineSyncedNoEndTimes = {
-	lyrics: {
-		syncType: 'LINE_SYNCED';
-		lines: {
-			startTimeMs: string;
-			words: string;
-		}[];
-	};
+	syncType: 'LINE_SYNCED';
+	lines: {
+		opposite: boolean;
+		start: number;
+		text: string;
+	}[];
 };
 
 // Given when the syncType is 'LINE_SYNCED' and endTimeMs is given
 export type LyricsLineSyncedEndTimes = {
-	lyrics: {
-		syncType: 'LINE_SYNCED';
-		lines: {
-			startTimeMs: string;
-			words: string;
-			endTimeMs: string;
-		}[];
-	};
+	syncType: 'LINE_SYNCED';
+	lines: {
+		opposite: boolean;
+		start: number;
+		text: string;
+		end: number;
+	}[];
 };
 
 export type LyricsLineSynced = LyricsLineSyncedNoEndTimes | LyricsLineSyncedEndTimes;
 
-export type Lyrics = LyricsUnsynced | LyricsLineSynced;
+export type SyllableLyricGroup = {
+	words: string;
+	part: boolean;
+	start: number;
+	end: number;
+};
+
+export type LyricsSyllableSynced = {
+	syncType: 'SYLLABLE_SYNCED';
+	lines: {
+		opposite: boolean;
+		start: number;
+		lead?: SyllableLyricGroup[];
+		background?: SyllableLyricGroup[];
+		end: number;
+	}[];
+};
+
+export type Lyrics = LyricsUnsynced | LyricsLineSynced | LyricsSyllableSynced;
