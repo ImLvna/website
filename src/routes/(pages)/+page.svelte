@@ -2,6 +2,7 @@
 	import { projects } from '$lib/projects';
 	import Spotify from '$lib/spotify.svelte.js';
 	import tooltip from '$lib/tooltip/index.svelte';
+	import { nullsToUndefined } from '$lib/util.js';
 
 	let { data } = $props();
 
@@ -15,8 +16,7 @@
 	});
 
 	let hasPlayed = $state(false);
-
-	const spotify = new Spotify();
+	const spotify = new Spotify(undefined, data.spotify);
 </script>
 
 <div class="root flex flex-col w-full h-full gap-3">

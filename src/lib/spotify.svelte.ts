@@ -31,8 +31,30 @@ export default class Spotify {
 		return this.getCurrentLyric();
 	});
 
-	constructor(options: Partial<SpotifyOptions> = {}) {
-		$inspect(this.options);
+	constructor(
+		options: Partial<SpotifyOptions> = {},
+		initial: {
+			item?: TrackItem & {
+				album: Album;
+				artists: Artist[];
+			};
+			progressMs?: number;
+			isPlaying?: boolean;
+			lyrics?: Lyrics;
+		} = {}
+	) {
+		if (initial?.item) {
+			this.item = initial.item;
+		}
+		if (initial?.progressMs) {
+			this.progressMs = initial.progressMs;
+		}
+		if (initial?.isPlaying) {
+			this.isPlaying = initial.isPlaying;
+		}
+		if (initial?.lyrics) {
+			this.lyrics = initial.lyrics;
+		}
 
 		if (options.nowPlayingApiUrl) {
 			this.options.nowPlayingApiUrl = options.nowPlayingApiUrl;
@@ -44,14 +66,17 @@ export default class Spotify {
 			this.options.fetchInterval = options.fetchInterval;
 		}
 
-		this.fetchNowPlaying();
-
-		if (browser)
+		if (browser) {
 			setInterval(() => {
 				if (this.progressMs) {
 					this.progressMs += 250;
 				}
 			}, 250);
+
+			setTimeout(() => {
+				this.fetchNowPlaying();
+			}, 5000);
+		}
 	}
 
 	async fetchNowPlaying() {
