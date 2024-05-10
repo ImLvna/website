@@ -1,4 +1,4 @@
-import type { Album, Artist, TrackItem } from '@spotify/web-api-ts-sdk';
+import type { Album, Artist, Context, TrackItem } from '@spotify/web-api-ts-sdk';
 import type {
 	Lyrics,
 	LyricsLineSynced,
@@ -26,6 +26,7 @@ export default class Spotify {
 				artists: Artist[];
 		  })
 		| null = $state(null);
+	context: Context | null = $state(null);
 	progressMs: number | null = $state(null);
 	isPlaying: boolean = $state(false);
 
@@ -55,6 +56,7 @@ export default class Spotify {
 				album: Album;
 				artists: Artist[];
 			};
+			context?: Context;
 			progressMs?: number;
 			isPlaying?: boolean;
 			lyrics?: Lyrics;
@@ -62,6 +64,9 @@ export default class Spotify {
 	) {
 		if (initial?.item) {
 			this.item = initial.item;
+		}
+		if (initial?.context) {
+			this.context = initial.context;
 		}
 		if (initial?.progressMs) {
 			this.progressMs = initial.progressMs;
@@ -102,6 +107,7 @@ export default class Spotify {
 		const res = await fetch(this.options.nowPlayingApiUrl);
 		const data = await res.json();
 		this.item = data.item;
+		this.context = data.context;
 		if (!this.item) {
 			this.lyrics = null;
 			this.progressMs = null;

@@ -1,26 +1,104 @@
 <script lang="ts">
+	/// <reference types="spotify-web-playback-sdk" />
 	import { browser } from '$app/environment';
-	import Spotify from '$lib/spotify.svelte';
+	import { PUBLIC_AUTH_SPOTIFY_ID } from '$env/static/public';
+	import { default as LilysSpotifyApi } from '$lib/spotify.svelte';
 	import type {
 		Lyrics,
 		LyricsSyllableSynced,
 		LyricsSynced,
 		LyricsUnsynced
 	} from '$lib/types/spotify.js';
+	import { SpotifyApi } from '@spotify/web-api-ts-sdk';
+	import { redirect } from '@sveltejs/kit';
 	import { onMount } from 'svelte';
 
 	const { data } = $props();
 
-	const spotify = new Spotify(undefined, data.spotify);
+	const lilysSpotifyApi = new LilysSpotifyApi(undefined, data.spotify);
+
+	let spotifyPlayer: Spotify.Player | null = $state(null);
+
+	let spotifyApi: SpotifyApi | null = $state(null);
+
+	let playerReady = $state(false);
+	let spotifyPlaybackReady = $derived(!!spotifyApi && playerReady);
+	let deviceId = $state<string | null>(null);
+	$effect(() => {
+		console.log(spotifyPlayer);
+		if (spotifyPlayer) {
+			spotifyPlayer.addListener('ready', ({ device_id }) => {
+				console.log('Player is ready');
+				deviceId = device_id;
+				playerReady = true;
+			});
+
+			spotifyPlayer.addListener('not_ready', () => {
+				console.log('Player is not ready');
+				playerReady = false;
+			});
+
+			spotifyPlayer.addListener('authentication_error', (err) => {
+				console.log('Player authentication error', err);
+			});
+
+			spotifyPlayer.addListener('account_error', (err) => {
+				console.log('Player account error', err);
+			});
+
+			spotifyPlayer.addListener('initialization_error', (err) => {
+				console.log('Player initialization error', err);
+			});
+
+			spotifyPlayer.addListener('playback_error', (err) => {
+				console.log('Player playback error', err);
+			});
+
+			spotifyPlayer.addListener('player_state_changed', (state) => {
+				console.log('Player state changed', state);
+			});
+
+			spotifyPlayer.connect();
+		}
+	});
 
 	const backgroundImage = $derived(
-		spotify.item?.uri.startsWith('spotify:local')
-			? `https://localfiles.lvna.gay/${spotify.item.uri}/image`
-			: spotify.item?.album.images[0].url
+		lilysSpotifyApi.item?.uri.startsWith('spotify:local')
+			? `https://localfiles.lvna.gay/${lilysSpotifyApi.item.uri}/image`
+			: lilysSpotifyApi.item?.album.images[0].url
 	);
 
+	const playCurrentSong = async () => {
+		if (!spotifyApi) return;
+		if (!spotifyPlayer) return;
+		if (!deviceId) return;
+		if (!lilysSpotifyApi.item) return;
+		const currentDeviceId = await spotifyApi.player.getPlaybackState();
+		if (currentDeviceId?.device?.id !== deviceId) {
+			if (currentDeviceId?.device?.id) {
+				spotifyApi.player.pausePlayback(currentDeviceId.device.id!);
+			}
+			spotifyApi.player.transferPlayback([deviceId]);
+			spotifyApi.player.startResumePlayback(deviceId, undefined, [lilysSpotifyApi.item.uri]);
+		}
+	};
+
 	$effect(() => {
-		spotify.lyrics;
+		lilysSpotifyApi.isPlaying;
+		lilysSpotifyApi.item?.uri;
+		spotifyPlayer?.getCurrentState().then((state) => {
+			if (state?.paused === false) {
+				if (lilysSpotifyApi.isPlaying && lilysSpotifyApi.item?.uri) {
+					spotifyApi?.player.startResumePlayback(deviceId!, undefined, [lilysSpotifyApi.item.uri]);
+				} else {
+					spotifyApi?.player.pausePlayback(deviceId!);
+				}
+			}
+		});
+	});
+
+	$effect(() => {
+		lilysSpotifyApi.lyrics;
 		const lyrics = document.querySelector('.lyrics');
 		const currentLyric = lyrics?.querySelector('.line.current') as HTMLDivElement | undefined;
 		if (currentLyric) {
@@ -32,7 +110,7 @@
 	});
 
 	$effect(() => {
-		spotify.currentLyric;
+		lilysSpotifyApi.currentLyric;
 		// Scroll to the last element matching .line.current
 		if (browser) {
 			const lyrics = document.querySelector('.lyrics');
@@ -54,6 +132,35 @@
 			}
 		}
 	});
+
+	onMount(() => {
+		window.onSpotifyWebPlaybackSDKReady = () => {
+			console.log('Spotify Web Playback SDK is ready');
+			if (data.session.accessToken) {
+				console.log(data.session.accessToken);
+				spotifyPlayer = new window.Spotify.Player({
+					name: "Lily's Website",
+					getOAuthToken: (cb: (token: string) => void) => {
+						cb(data.session.accessToken!);
+					},
+					volume: 0.5
+				});
+
+				spotifyApi = SpotifyApi.withAccessToken(PUBLIC_AUTH_SPOTIFY_ID, {
+					access_token: data.session.accessToken!,
+
+					token_type: 'Bearer',
+
+					expires_in: 3600,
+					refresh_token: ''
+				});
+			}
+		};
+
+		const script = document.createElement('script');
+		script.src = 'https://sdk.scdn.co/spotify-player.js';
+		document.body.appendChild(script);
+	});
 </script>
 
 <div class="root w-full h-content">
@@ -61,20 +168,20 @@
 		<img class="background" src={backgroundImage} alt="Background for lyrics page" />
 	</div>
 	<div class="container mx-auto max-w-screen-md h-content">
-		{#if spotify.lyrics}
-			{#if spotify.lyrics.syncType === 'UNSYNCED'}
+		{#if lilysSpotifyApi.lyrics}
+			{#if lilysSpotifyApi.lyrics.syncType === 'UNSYNCED'}
 				UNSYNCED
 			{:else}
-				<div class="lyrics" class:hasOpposite={spotify.lyricsHaveOpposite}>
-					{#each spotify.lyrics.lines as line}
+				<div class="lyrics" class:hasOpposite={lilysSpotifyApi.lyricsHaveOpposite}>
+					{#each lilysSpotifyApi.lyrics.lines as line}
 						<div class="w-full">
-							{#if spotify.lyrics.syncType === 'LINE_SYNCED'}
+							{#if lilysSpotifyApi.lyrics.syncType === 'LINE_SYNCED'}
 								{#if 'text' in line}
 									<div
 										class="line"
 										class:opposite={line.opposite}
-										class:past={spotify.lineIsPast(line)}
-										class:current={spotify.currentLyric === line}
+										class:past={lilysSpotifyApi.lineIsPast(line)}
+										class:current={lilysSpotifyApi.currentLyric === line}
 									>
 										<div class="text" class:opposite={line.opposite}>
 											{line.text}
@@ -85,15 +192,15 @@
 								<div
 									class="line syllable"
 									class:opposite={line.opposite}
-									class:past={spotify.lineIsPast(line)}
-									class:current={spotify.currentLyric === line}
+									class:past={lilysSpotifyApi.lineIsPast(line)}
+									class:current={lilysSpotifyApi.currentLyric === line}
 								>
 									<div class="syllable flex flex-row w-full">
 										{#each line.background || [] as bkg}
 											<div
 												class="text bkg"
-												class:currentSyllable={spotify.currentLyric === line &&
-													spotify.currentSyllables?.back.includes(bkg)}
+												class:currentSyllable={lilysSpotifyApi.currentLyric === line &&
+													lilysSpotifyApi.currentSyllables?.back.includes(bkg)}
 												class:part={bkg.part}
 											>
 												{#if bkg === line.background![0]}
@@ -111,8 +218,8 @@
 										{#each line.lead || [] as lead}
 											<div
 												class="text lead"
-												class:currentSyllable={spotify.currentLyric === line &&
-													spotify.currentSyllables?.front.includes(lead)}
+												class:currentSyllable={lilysSpotifyApi.currentLyric === line &&
+													lilysSpotifyApi.currentSyllables?.front.includes(lead)}
 												class:part={lead.part}
 											>
 												{lead.words}
@@ -127,9 +234,26 @@
 			{/if}
 		{/if}
 	</div>
+
+	<div class="controls">
+		{#if spotifyPlaybackReady}
+			<button onclick={playCurrentSong}>Listen Along</button>
+		{:else}
+			<button onclick={() => (window.location.href = '/auth/signin')}>Listen Along</button>
+		{/if}
+	</div>
 </div>
 
 <style lang="postcss">
+	.controls {
+		position: fixed;
+		bottom: 0;
+		right: 0;
+		background-color: rgba(0, 0, 0, 0.5);
+		padding: 10px;
+		z-index: 100;
+	}
+
 	.h-content {
 		height: fit-content;
 	}
