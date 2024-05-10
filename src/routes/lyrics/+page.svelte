@@ -56,11 +56,11 @@
 	});
 </script>
 
-<div class="root w-full h-full">
+<div class="root w-full h-content">
 	<div class="bkgcontainer">
 		<img class="background" src={backgroundImage} alt="Background for lyrics page" />
 	</div>
-	<div class="container mx-auto max-w-screen-md">
+	<div class="container mx-auto max-w-screen-md h-content">
 		{#if spotify.lyrics}
 			{#if spotify.lyrics.syncType === 'UNSYNCED'}
 				UNSYNCED
@@ -117,6 +117,9 @@
 </div>
 
 <style lang="postcss">
+	.h-content {
+		height: fit-content;
+	}
 	.line {
 		display: flex;
 		flex-direction: column;
@@ -139,6 +142,10 @@
 		font-size: 2.5rem;
 	}
 
+	.line {
+		transition: text-shadow 0.5s;
+	}
+
 	.line.current:not(.syllable) .text {
 		@apply glow;
 	}
@@ -154,9 +161,8 @@
 	.past .text {
 		font-size: 1.5rem;
 	}
-
 	.bkgcontainer {
-		position: absolute;
+		position: fixed;
 		top: 0;
 		left: 0;
 		width: 5000px;
