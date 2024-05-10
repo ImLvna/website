@@ -30,6 +30,7 @@ export default class Spotify {
 	isPlaying: boolean = $state(false);
 
 	lyrics: Lyrics | null = $state(null);
+	lyricsHaveOpposite = $derived(this.lyrics?.lines.find((line) => line.opposite));
 	currentLyric: (LyricsLineSynced | LyricsSyllableSynced)['lines'][number] | null = $derived.by(
 		() => {
 			this.item;
@@ -84,7 +85,7 @@ export default class Spotify {
 
 		if (browser) {
 			setInterval(() => {
-				if (this.progressMs) {
+				if (this.progressMs && this.isPlaying) {
 					this.progressMs += 250;
 				}
 			}, 250);
