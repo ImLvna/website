@@ -80,6 +80,7 @@
 			}
 			spotifyApi.player.transferPlayback([deviceId]);
 			spotifyApi.player.startResumePlayback(deviceId, undefined, [lilysSpotifyApi.item.uri]);
+			spotifyApi.player.seekToPosition(lilysSpotifyApi.progressMs!, deviceId!);
 		}
 	};
 
@@ -90,6 +91,7 @@
 			if (state?.paused === false) {
 				if (lilysSpotifyApi.isPlaying && lilysSpotifyApi.item?.uri) {
 					spotifyApi?.player.startResumePlayback(deviceId!, undefined, [lilysSpotifyApi.item.uri]);
+					spotifyApi?.player.seekToPosition(lilysSpotifyApi.progressMs!, deviceId!);
 				} else {
 					spotifyApi?.player.pausePlayback(deviceId!);
 				}
