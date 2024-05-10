@@ -1,5 +1,11 @@
 import type { Album, Artist, TrackItem } from '@spotify/web-api-ts-sdk';
-import type { Lyrics, LyricsLineSynced, LyricsLineSyncedEndTimes } from './types/spotify';
+import type {
+	Lyrics,
+	LyricsLineSynced,
+	LyricsSyllableSynced,
+	LyricsSynced,
+	SyllableLyricGroup
+} from './types/spotify';
 import { browser } from '$app/environment';
 
 interface SpotifyOptions {
@@ -24,11 +30,21 @@ export default class Spotify {
 	isPlaying: boolean = $state(false);
 
 	lyrics: Lyrics | null = $state(null);
-	currentLyric: LyricsLineSynced['lines'][number] | null = $derived.by(() => {
-		this.item;
-		this.progressMs;
+	currentLyric: (LyricsLineSynced | LyricsSyllableSynced)['lines'][number] | null = $derived.by(
+		() => {
+			this.item;
+			this.progressMs;
+			this.lyrics;
+			return this.getCurrentLyric();
+		}
+	);
+	currentSyllables: {
+		front: SyllableLyricGroup[];
+		back: SyllableLyricGroup[];
+	} | null = $derived.by(() => {
 		this.lyrics;
-		return this.getCurrentLyric();
+		this.progressMs;
+		return this.getCurrentSyllables();
 	});
 
 	constructor(
@@ -117,26 +133,40 @@ export default class Spotify {
 		this.lyrics = data;
 	}
 
-	getCurrentLyric(): LyricsLineSynced['lines'][number] | null {
+	getCurrentLyric(): (LyricsLineSynced | LyricsSyllableSynced)['lines'][number] | null {
 		if (!this.lyrics) return null;
 		if (this.lyrics.syncType === 'UNSYNCED') return null;
 		if (!this.progressMs) return null;
-		switch (this.lyrics.syncType) {
-			case 'LINE_SYNCED': {
-				const before = this.lyrics.lines.filter((line) => line.start <= this.progressMs!);
-				if (before.length === 0) return null;
-				if ((before[0] as LyricsLineSyncedEndTimes['lines'][number]).end !== undefined) {
-					return (
-						(before as LyricsLineSyncedEndTimes['lines']).find(
-							(line) => line.end > this.progressMs!
-						) || null
-					);
-				}
-				return before[before.length - 1];
-			}
-			case 'SYLLABLE_SYNCED':
-				return null;
+		const before = this.lyrics.lines.filter((line) => line.start <= this.progressMs!);
+		if (before.length === 0) return null;
+		if (before[0].end === -1) return before[0];
+		return before.find((line) => line.end > this.progressMs!) || null;
+	}
+
+	getCurrentSyllables() {
+		if (!this.lyrics) return null;
+		if (this.lyrics.syncType === 'UNSYNCED') return null;
+		if (this.lyrics.syncType === 'LINE_SYNCED') return null;
+		if (!this.progressMs) return null;
+		const line = this.currentLyric as LyricsSyllableSynced['lines'][number];
+		if (!line) return null;
+		const front = line.lead?.filter((syllable) => this.syllableIsCurrent(syllable)) ?? [];
+		const back = line.background?.filter((syllable) => this.syllableIsCurrent(syllable)) ?? [];
+		return { front, back };
+	}
+
+	syllableIsCurrent(group: SyllableLyricGroup) {
+		if (!this.progressMs) return false;
+		if (group.start > this.progressMs) return false;
+		return true;
+	}
+
+	lineIsPast(line: LyricsSynced['lines'][number]) {
+		if (!this.progressMs) return false;
+		// Just incase the api breaks and doesnt give us an end time
+		if ('end' in (line as Omit<typeof line, 'end'> | typeof line)) {
+			return line.end < this.progressMs;
 		}
-		return null;
+		return line.start > this.progressMs;
 	}
 }
