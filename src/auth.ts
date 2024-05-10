@@ -31,5 +31,6 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 		async redirect() {
 			return '/lyrics';
 		}
-	}
+	},
+	trustHost: true
 });
