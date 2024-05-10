@@ -235,7 +235,7 @@
 		{/if}
 	</div>
 
-	<div class="controls">
+	<div class="controls hidden">
 		{#if spotifyPlaybackReady}
 			<button onclick={playCurrentSong}>Listen Along</button>
 		{:else}
