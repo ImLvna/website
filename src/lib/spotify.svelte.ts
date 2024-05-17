@@ -135,7 +135,7 @@ export default class Spotify {
 		if (this.item.uri.startsWith('spotify:local:')) {
 			return;
 		}
-		const res = await fetch(`${this.options.lyricsApiUrl}/lyrics/${this.item.uri}`);
+		const res = await fetch(`${this.options.lyricsApiUrl}/lyrics/${this.item.uri}/spotify`);
 		const data = await res.json();
 		this.lyrics = data;
 	}
