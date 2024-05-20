@@ -6,6 +6,7 @@ export interface NowPlaying extends PlaybackState {
 		artists: Artist[];
 	};
 }
+
 export type LyricsUnsynced = {
 	syncType: 'UNSYNCED';
 	lines: {
@@ -37,7 +38,11 @@ export type LyricsSyllableSynced = {
 		opposite: boolean;
 		start: number;
 		lead?: SyllableLyricGroup[];
-		background?: SyllableLyricGroup[];
+		background?: {
+			groups: SyllableLyricGroup[];
+			start: number;
+			end: number;
+		}[];
 		end: number;
 	}[];
 };

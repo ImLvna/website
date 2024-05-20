@@ -47,7 +47,13 @@
 					<p>{spotify.item.name}</p>
 					<p>{spotify.item.artists.map((a) => a.name).join(', ')}</p>
 					{#if spotify.currentLyric}
-						<p use:tooltip={'Lyrics!'}>{spotify.currentLyric.text}</p>
+						<p use:tooltip={'Lyrics!'}>
+							{#if 'text' in spotify.currentLyric}
+								{spotify.currentLyric.text}
+							{:else}
+								{spotify.currentLyric.lead?.map((l) => l.words).join(' ')}
+							{/if}
+						</p>
 					{/if}
 				</div>
 				{#if spotify.item.uri.startsWith('spotify:local')}

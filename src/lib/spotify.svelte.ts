@@ -42,7 +42,7 @@ export default class Spotify {
 	);
 	currentSyllables: {
 		front: SyllableLyricGroup[];
-		back: SyllableLyricGroup[];
+		back: SyllableLyricGroup[][];
 	} | null = $derived.by(() => {
 		this.lyrics;
 		this.progressMs;
@@ -135,9 +135,13 @@ export default class Spotify {
 		if (this.item.uri.startsWith('spotify:local:')) {
 			return;
 		}
-		const res = await fetch(`${this.options.lyricsApiUrl}/lyrics/${this.item.uri}/spotify`);
-		const data = await res.json();
-		this.lyrics = data;
+		try {
+			const res = await fetch(`${this.options.lyricsApiUrl}/lyrics/${this.item.uri}`);
+			const data = await res.json();
+			this.lyrics = data;
+		} catch (e) {
+			console.error(e);
+		}
 	}
 
 	getCurrentLyric(): (LyricsLineSynced | LyricsSyllableSynced)['lines'][number] | null {
@@ -158,7 +162,12 @@ export default class Spotify {
 		const line = this.currentLyric as LyricsSyllableSynced['lines'][number];
 		if (!line) return null;
 		const front = line.lead?.filter((syllable) => this.syllableIsCurrent(syllable)) ?? [];
-		const back = line.background?.filter((syllable) => this.syllableIsCurrent(syllable)) ?? [];
+		const back =
+			line.background
+				?.map((background) =>
+					background.groups.filter((syllable) => this.syllableIsCurrent(syllable))
+				)
+				.filter((i) => i.length) ?? [];
 		return { front, back };
 	}
 

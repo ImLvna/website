@@ -197,25 +197,27 @@
 									class:past={lilysSpotifyApi.lineIsPast(line)}
 									class:current={lilysSpotifyApi.currentLyric === line}
 								>
-									<div class="syllable flex flex-row w-full">
-										{#each line.background || [] as bkg}
-											<div
-												class="text bkg"
-												class:currentSyllable={lilysSpotifyApi.currentLyric === line &&
-													lilysSpotifyApi.currentSyllables?.back.includes(bkg)}
-												class:part={bkg.part}
-											>
-												{#if bkg === line.background![0]}
-													(
-												{/if}
-												{bkg.words}
+									{#each line.background || [] as background}
+										<div class="syllable flex flex-row w-full">
+											{#each background.groups || [] as bkg}
+												<div
+													class="text bkg"
+													class:currentSyllable={lilysSpotifyApi.currentLyric === line &&
+														lilysSpotifyApi.currentSyllables?.back.flat().includes(bkg)}
+													class:part={bkg.part}
+												>
+													{#if bkg === background.groups[0]}
+														(
+													{/if}
+													{bkg.words}
 
-												{#if bkg === line.background![line.background!.length - 1]}
-													)
-												{/if}
-											</div>
-										{/each}
-									</div>
+													{#if bkg === background.groups[background.groups.length - 1]}
+														)
+													{/if}
+												</div>
+											{/each}
+										</div>
+									{/each}
 									<div class="syllable flex flex-row w-full">
 										{#each line.lead || [] as lead}
 											<div
