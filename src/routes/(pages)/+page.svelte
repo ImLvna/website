@@ -25,7 +25,7 @@
 		src="https://cdn.discordapp.com/avatars/{data.user.id}/{data.user.avatar}.png"
 		alt="Profile"
 	/>
-	<h1 class="text-5xl">Lily</h1>
+	<h1 class="text-5xl">Lillith</h1>
 	<p class="text-1xl py-10">
 		I am a freelance programmer who works on a variety of projects. I work in many languages, but
 		specialize in Typescript
